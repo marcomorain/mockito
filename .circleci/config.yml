@@ -1,0 +1,51 @@
+version: 2.1
+
+orbs:
+  gradle: circleci/gradle@dev:test-metadata
+
+jobs:
+  release:
+    executor: gradle/gradle
+    steps:
+      - checkout
+      - gradle/with_cache:
+          steps:
+            - run: ./gradlew --stacktrace ciPerformRelease
+
+workflows:
+  workflow:
+    jobs:
+      - gradle/test:
+          test_command: build idea
+      - release:
+          requires:
+            - gradle/test
+
+
+# matrix:
+#   include:
+#   - jdk: oraclejdk8
+#   - jdk: oraclejdk8
+#     env: SKIP_RELEASE=true MOCK_MAKER=mock-maker-inline
+#   - jdk: oraclejdk9
+#     env: SKIP_RELEASE=true
+#   - jdk: oraclejdk9
+#     env: SKIP_RELEASE=true MOCK_MAKER=mock-maker-inline
+#   - jdk: oraclejdk9
+#     env: SKIP_RELEASE=true SIMULATE_JAVA11=true
+#   - install: . ./install-jdk.sh -F 10 -L GPL
+#     env: SKIP_RELEASE=true JDK='Oracle JDK 10'
+#   - install: . ./install-jdk.sh -F 10 -L GPL
+#     env: SKIP_RELEASE=true MOCK_MAKER=mock-maker-inline JDK='Oracle JDK 10'
+#   - install: . ./install-jdk.sh -F 11 -L BCL
+#     env: SKIP_RELEASE=true JDK='Oracle JDK 11'
+#   - install: . ./install-jdk.sh -F 11 -L BCL
+#     env: SKIP_RELEASE=true MOCK_MAKER=mock-maker-inline JDK='Oracle JDK 11'
+#   allow_failures:
+#     - env: SKIP_RELEASE=true JDK='Oracle JDK 11'
+#     - env: SKIP_RELEASE=true MOCK_MAKER=mock-maker-inline JDK='Oracle JDK 11'
+
+# after_success:
+#   #Generates coverage report:
+#   - ./gradlew --stacktrace coverageReport && cp build/reports/jacoco/mockitoCoverage/mockitoCoverage.xml jacoco.xml || echo "Code coverage failed"
+#   - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
